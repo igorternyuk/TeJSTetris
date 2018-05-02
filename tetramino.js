@@ -1,23 +1,13 @@
+const Direction = Object.freeze({ LEFT: { x: -1, y: 0 }, RIGHT: { x: +1, y: 0 }, DOWN: { x: 0, y: +1 } });
 const Shapes = Object.freeze({ T:0, L:1, J:2, S:3, Z:4, O:5, I:6 });
 
-class Tetramino{
-	constructor(x, y, shape){
+class Tetramino {
+	constructor(x, y, prototype){
 		this.x = x;
 		this.y = y;
-		this.shapeType = shape;
-		this.shape = prototypeMatrix[shape].slice();;
-	}
-
-	moveRight(){
-		if(this.x < fieldWidth - 1){
-			++this.x;
-		}
-	}
-
-	moveLeft(){
-		if(this.x > 0){
-			--this.x;
-		}
+		this.shapeType = prototype;
+		this.shape = prototypes[prototype].shape.slice();
+		this.farbe = prototypes[prototype].farbe;
 	}
 
 	rotateClockwise(){
@@ -28,15 +18,20 @@ class Tetramino{
 
 	}
 
+	move(direction){
+		this.x += direction.x;
+		this.y += direction.y;
+	}
+
 	oneStepDown(){
-		if(isGroundTouch()){
-			this.merge();
-		}
-		++this.y;
+		this.move(Direction.DOWN);
 	}
 
 	dropDown(){
-		++this.y;
+		while(!this.isGroundTouch()){
+			this.oneStepDown();
+		}
+		this.move(Direction.DOWN);;
 	}
 
 	merge(){
@@ -45,7 +40,7 @@ class Tetramino{
 				if(this.shape[y][x] > 0){
 					let currBlockX = this.x + x;
 					let currBlockY = this.y + y;
-					field[currBlockY][currBlockX] = this.shapeType;
+					field[currBlockY][currBlockX] = 1;
 				}
 			}
 		}
@@ -68,7 +63,7 @@ class Tetramino{
 
 	render(){
 		noStroke();
-		fill(color(255,0,0));
+		fill(this.farbe);
 		this.shape.forEach((row, y) => {
 			row.forEach((value, x) => {
 				if(value > 0){
@@ -81,47 +76,75 @@ class Tetramino{
 	}
 }
 
-const prototypeMatrix = [
+const prototypes = [
 	//T-shape
-	[
-		[1,1,1],
-		[0,1,0],
-		[0,0,0]
-	],
+	{
+		shape:
+		[
+			[1,1,1],
+			[0,1,0],
+			[0,0,0]
+		],
+		farbe: "#af27cd"
+	},
 	//L-shape
-	[
-		[0,1,0],
-		[0,1,0],
-		[0,1,1]
-	],
+	{
+		shape:
+		[
+			[0,1,0],
+			[0,1,0],
+			[0,1,1]
+		],
+		farbe: "#976ddb"
+	},
 	//J-shape
-	[
-		[0,1,0],
-		[0,1,0],
-		[1,1,0]
-	],
+	{
+		shape:
+		[
+			[0,1,0],
+			[0,1,0],
+			[1,1,0]
+		],
+		farbe: "#cc0000"
+	},
 	//S-shape
-	[
-		[0,1,1],
-		[1,1,0],
-		[0,0,0]
-	],
+	{
+		shape:
+		[
+			[0,1,1],
+			[1,1,0],
+			[0,0,0]
+		],
+		farbe: "#0099cc"
+	},
 	//Z-shape
-	[
-		[1,1,0],
-		[0,1,1],
-		[0,0,0]	
-	],
+	{
+		shape:
+		[
+			[1,1,0],
+			[0,1,1],
+			[0,0,0]	
+		],
+		farbe: "#82f827"
+	},
 	//O-shape
-	[
-		[1,1],
-		[1,1]
-	],
+	{
+		shape:
+		[
+			[1,1],
+			[1,1]
+		],
+		farbe: "#ff4040"
+	},
 	//I-shape
-	[
-		[0,0,0,0],
-		[1,1,1,1],
-		[0,0,0,0],
-		[0,0,0,0]
-	]	
+	{
+		shape:
+		[
+			[0,0,0,0],
+			[1,1,1,1],
+			[0,0,0,0],
+			[0,0,0,0]
+		],
+		farbe: "#ffff66"
+	}	
 ];

@@ -1,7 +1,7 @@
 var fieldWidth = 12;
 var fieldHeight = 20;
 var tileSize = 25;
-var canvasWidth = tileSize * fieldWidth + 100;
+var canvasWidth = tileSize * fieldWidth + 160;
 var canvasHeight = tileSize * fieldHeight;
 
 var GameState = Object.freeze({ PLAY: 0, PAUSED: 1, GAME_OVER: 2 });
@@ -10,70 +10,66 @@ var level = 1;
 var numRemovedLines = 0;
 var score = 0;
 var gameState = GameState.PLAY;
-var activeTetramino;
+var activePiece, nextPiece;
+var nextPieceX = tileSize * fieldWidth + 5;
+var nextPieceY = 60;
 
 function setup() {
     createCanvas(canvasWidth, canvasHeight);
-    frameRate(10);
+    frameRate(60);
     field = createMatrix(fieldHeight + 1, fieldWidth);
-    activeTetramino = new Tetramino(fieldWidth / 2, 1, Shapes.T);
+    activePiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
+    nextPiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
 }
 
 function keyPressed(){
 	switch(keyCode){
 		case LEFT_ARROW:
-			activeTetramino.moveLeft();
+			activePiece.move(Direction.LEFT);
 			break;
 		case RIGHT_ARROW:
-			activeTetramino.moveRight();
+			activePiece.move(Direction.RIGHT);
 			break;
 		case UP_ARROW:
-			activeTetramino.rotateCounterclockwise();
+			activePiece.rotateCounterclockwise();
 			break;
 		case DOWN_ARROW:
-			activeTetramino.rotateClockwise();
-			break;
-		default:
-			break;
-	}
-}
-/*
-function keyPressed(){
-	switch(keyCode){
-		case LEFT_ARROW:
-			snake.turn(dirLeft);
-			break;
-		case RIGHT_ARROW:
-			snake.turn(dirRight);
-			break;
-		case UP_ARROW:
-			snake.turn(dirUp);
-			break;
-		case DOWN_ARROW:
-			snake.turn(dirDown);
-			break;
-		case 78:
-			startNewGame();
-			break;
-		case 32:
-			togglePause();
-			break;
-		default:
+			activePiece.move(Direction.DOWN);
+			activePiece.rotateClockwise();
 			break;
 	}
-}
-*/
 
+	if(key === ' '){
+		activePiece.dropDown;
+	}
+}
+
+function spawnNewRandomTetramino(){
+	activePiece = nextPiece;
+	nextPiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
+}
 
 //main loop
 function draw() {
+	if(frameCount % 60 === 0){
+		//activePiece.move(Direction.DOWN);
+		activePiece.oneStepDown();
+		if(activePiece.isGroundTouch()){
+			activePiece.merge();
+			spawnNewRandomTetramino();
+		}
+	}
+	//activePiece.oneStepDown();
 	background(0);
-	drawField();
-	activeTetramino.dropDown()
-	activeTetramino.render();
+	renderField();
+	renderNextPiece();
+	renderScore();
+	//activePiece.oneStepDown()
+
+	activePiece.render();
 }
 
-function drawField(){
+function renderField(){
 	fill(182,255,0);
 	noStroke();
 	for(let y = 0; y < field.length - 2; ++y){
@@ -81,6 +77,10 @@ function drawField(){
 			let px = x * tileSize + tileSize;
 			let py = y * tileSize + tileSize;
 			ellipse(px, py, 3);
+			if(field[y][x] > 0){
+				fill(prototypes[field[y][x]].farbe);
+				rect(x * tileSize + 1, y * tileSize + 1, tileSize - 1, tileSize - 1);
+			}
 		}
 	}
 	noFill();
@@ -89,19 +89,40 @@ function drawField(){
 	rect(0,0,tileSize * fieldWidth, tileSize * fieldHeight - 2);
 }
 
-function drawActiveTetramino(){
-
+function renderNextPiece(){	
+	noFill();
+	stroke(color(255,0,0));
+	strokeWeight(2);
+	textFont('Arial');
+	textSize(16);
+	text("NEXT PIECE:", tileSize * fieldWidth + 5, 25);
+	noStroke();
+	nextPiece.shape.forEach((row, y) => {
+		row.forEach((value, x) => {
+			if(value > 0){
+				fill(prototypes[nextPiece.shapeType].farbe);
+				rect(nextPieceX + x * tileSize + 1,
+				     nextPieceY + y * tileSize + 1,
+				     tileSize - 1, tileSize - 1);
+			}
+		});
+	});
 }
 
-function drawNextTetramino(){
-	
+function renderScore(){
+	noFill();
+	stroke(color(255,0,0));
+	strokeWeight(2);
+	textFont('Arial');
+	textSize(16);
+	text("SCORE:\n" + score, tileSize * fieldWidth + 5, 150);
+	stroke(color(0,255,0));
+	text("LINES REMOVED:\n" + numRemovedLines, tileSize * fieldWidth + 5, 200);
+	stroke(color(255,255,0));
+	text("LEVEL:\n" + level, tileSize * fieldWidth + 5, 250);
 }
 
-function drawScore(){
-	
-}
-
-function drawGameInfo(){
+function renderGameInfo(){
 	
 }
 
