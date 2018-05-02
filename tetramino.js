@@ -6,7 +6,7 @@ class Tetramino {
 		this.x = x;
 		this.y = y;
 		this.shapeType = prototype;
-		this.shape = prototypes[prototype].shape.slice();
+		this.shape = copyMatrix(prototypes[prototype].shape);
 		this.farbe = prototypes[prototype].farbe;
 	}
 
@@ -46,12 +46,12 @@ class Tetramino {
 		}
 	}
 
-	rotateClockwise(){
-
-	}
-
-	rotateCounterclockwise(){
-
+	rotate(clockwise){
+		rotateMatrix(this.shape, clockwise);
+		if(this.isCollision()){
+			console.log("cancel move");
+			rotateMatrix(this.shape, !clockwise);
+		}
 	}
 
 	dropDown(){
@@ -100,6 +100,36 @@ class Tetramino {
 				}
 			});
 		});
+	}
+}
+
+function copyMatrix(matrix){
+	let newMatrix = new Array(matrix.length);
+	for(let i = 0; i < newMatrix.length; ++i){
+		newMatrix[i] = new Array(matrix[i].length);
+	}
+
+	for(let y = 0; y < matrix.length; ++y){
+		for(let x = 0; x < matrix[y].length; ++x){
+			newMatrix[y][x] = matrix[y][x];
+		}
+	}
+	return newMatrix;
+}
+
+function rotateMatrix(matrix, clockwise = true){
+	for(let y = 0; y < matrix.length; ++y){
+		for(let x = 0; x < y; ++x){
+			//a = matrix[x][y];
+			//b = matrix[y][x];
+			[matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+		}
+	}
+
+	if(clockwise){
+		matrix.forEach(row => row.reverse());
+	} else {
+		matrix.reverse();
 	}
 }
 

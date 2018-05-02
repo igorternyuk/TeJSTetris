@@ -4,7 +4,8 @@ var tileSize = 18;
 var canvasWidth = tileSize * fieldWidth + 160;
 var canvasHeight = tileSize * fieldHeight;
 
-var GameState = Object.freeze({ PLAY: 0, PAUSED: 1, GAME_OVER: 2 });
+const GameState = Object.freeze({ PLAY: 0, PAUSED: 1, GAME_OVER: 2 });
+const Scores = [300,500,800,1500];
 var field;
 var level = 1;
 var numRemovedLines = 0;
@@ -13,7 +14,7 @@ var gameState = GameState.PLAY;
 var activePiece, nextPiece;
 var nextPieceX = tileSize * fieldWidth + 5;
 var nextPieceY = 45;
-var numMerge = 0;
+//var numMerge = 0;
 
 function setup() {
     createCanvas(canvasWidth, canvasHeight);
@@ -21,6 +22,8 @@ function setup() {
     field = createMatrix(fieldHeight + 1, fieldWidth);
     activePiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
     nextPiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
+    const matrix = Object.freeze({ matrix: [1,2,3,4]});
+
 }
 
 function togglePause(){
@@ -32,9 +35,6 @@ function togglePause(){
 }
 
 function keyPressed(){
-	if(key === ' '){
-		togglePause();
-	} 
 	//console.log("keyCode = " + keyCode);
 	switch(keyCode){
 		case LEFT_ARROW:
@@ -44,22 +44,53 @@ function keyPressed(){
 			activePiece.move(Direction.RIGHT);
 			break;
 		case UP_ARROW:
-			activePiece.rotateCounterclockwise();
+			activePiece.rotate(false);
 			break;
 		case DOWN_ARROW:
-			activePiece.rotateClockwise();
-		case 13:
-			activePiece.dropDown();
+			activePiece.rotate(true);
 			break;
 	}
 
-	
+	if(key === ' '){
+		activePiece.dropDown();
+	} else if(key === 'P'){
+		togglePause();
+	}	
 }
 
 function spawnNewRandomTetramino(){
-	//activePiece.merge();
-	activePiece = nextPiece;
+    activePiece = nextPiece;
 	nextPiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
+}
+
+function checkFilledLines(){
+	console.log("Check for filled rows");
+	let numFilledRows = 0;
+	for(let row = 0; row < field.length - 1; ++row){
+		let isCurrRowFilled = true;
+		inner:
+		for(let x = 0; x < field[row].length; ++x){
+			if(field[row][x] == 0){
+				isCurrRowFilled = false;
+				break inner;
+			}
+		}
+
+		if(isCurrRowFilled){
+			console.log("Row is Filled");
+			console.log("row = " + row);
+			++numFilledRows;
+			for(let y = row; y > 0; --y){
+				console.log("y = " + y);
+				for(let x = 0; x < field[y].length; ++x){
+					field[y][x] = field[y - 1][x]; 										
+				}
+			}
+		}
+	}
+	numRemovedLines += numFilledRows;
+	if(numRemovedLines > 0)
+		score += Scores[numRemovedLines - 1];
 }
 
 function printField(){
@@ -76,10 +107,11 @@ function draw() {
 			//activePiece.move(Direction.DOWN);
 			if(activePiece.isGroundTouch()){
 				activePiece.merge();
-				++numMerge;
-				console.log("numMerge = ", numMerge);				
+				//++numMerge;
+				//console.log("numMerge = ", numMerge);				
 				spawnNewRandomTetramino();
-				printField();
+				//printField();
+				checkFilledLines();
 			} else {
 				activePiece.oneStepDown();
 			}
@@ -187,6 +219,3 @@ function createMatrix(rowCount, colCount){
 	}
 	return matrix;
 }
-
-
-
