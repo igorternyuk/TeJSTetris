@@ -1,4 +1,9 @@
-const Direction = Object.freeze({ LEFT: { x: -1, y: 0 }, RIGHT: { x: +1, y: 0 }, DOWN: { x: 0, y: +1 } });
+const Direction = Object.freeze({
+	LEFT: { x: -1, y: 0 },
+ 	RIGHT: { x: +1, y: 0 },
+   	DOWN: { x: 0, y: +1 } 
+});
+
 const Shapes = Object.freeze({ T:0, L:1, J:2, S:3, Z:4, O:5, I:6 });
 
 class Tetramino {
@@ -15,7 +20,7 @@ class Tetramino {
 			for(let x = 0; x < this.shape[y].length; ++x){
 				let currBlockX = this.x + x;
 				let currBlockY = this.y + y;
-				//console.log("bx = " + currBlockX + " by = " + currBlockY);				
+		
 				if(this.shape[y][x] > 0){
 					if(currBlockY < 0 || currBlockY > field.length - 1
 					 ||currBlockX < 0 || currBlockX > field[currBlockY].length - 1){
@@ -120,8 +125,6 @@ function copyMatrix(matrix){
 function rotateMatrix(matrix, clockwise = true){
 	for(let y = 0; y < matrix.length; ++y){
 		for(let x = 0; x < y; ++x){
-			//a = matrix[x][y];
-			//b = matrix[y][x];
 			[matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
 		}
 	}

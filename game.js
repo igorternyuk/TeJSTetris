@@ -5,7 +5,7 @@ var canvasWidth = tileSize * fieldWidth + 160;
 var canvasHeight = tileSize * fieldHeight;
 
 const GameState = Object.freeze({ PLAY: 0, PAUSED: 1, GAME_OVER: 2 });
-const Scores = [300,500,800,1500];
+const Scores = [ 300,500,800,1500 ];
 var field;
 var level = 1;
 var numRemovedLines = 0;
@@ -14,11 +14,11 @@ var gameState = GameState.PLAY;
 var activePiece, nextPiece;
 var nextPieceX = tileSize * fieldWidth + 5;
 var nextPieceY = 45;
-//var numMerge = 0;
+var speed = 29;
 
 function setup() {
     createCanvas(canvasWidth, canvasHeight);
-    frameRate(20);
+    frameRate(30);
     field = createMatrix(fieldHeight + 1, fieldWidth);
     activePiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
     nextPiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
@@ -55,7 +55,28 @@ function keyPressed(){
 		activePiece.dropDown();
 	} else if(key === 'P'){
 		togglePause();
+	} else if(key === 'N'){
+		startNewGame();
 	}	
+}
+
+function startNewGame(){
+	clearField();
+	activePiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
+    nextPiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
+	level = 1;
+	numRemovedLines = 0;
+	score = 0;
+	spped = 29;
+	gameState = GameState.PLAY;
+}
+
+function clearField(){
+	for(let y = 0; y < field.length - 1; ++y){
+		for(let x = 0; x < field[y].length; ++x){
+			field[y][x] = 0;
+		}
+	}
 }
 
 function spawnNewRandomTetramino(){
@@ -64,7 +85,6 @@ function spawnNewRandomTetramino(){
 }
 
 function checkFilledLines(){
-	console.log("Check for filled rows");
 	let numFilledRows = 0;
 	for(let row = 0; row < field.length - 1; ++row){
 		let isCurrRowFilled = true;
@@ -77,11 +97,8 @@ function checkFilledLines(){
 		}
 
 		if(isCurrRowFilled){
-			console.log("Row is Filled");
-			console.log("row = " + row);
 			++numFilledRows;
 			for(let y = row; y > 0; --y){
-				console.log("y = " + y);
 				for(let x = 0; x < field[y].length; ++x){
 					field[y][x] = field[y - 1][x]; 										
 				}
@@ -89,8 +106,19 @@ function checkFilledLines(){
 		}
 	}
 	numRemovedLines += numFilledRows;
-	if(numRemovedLines > 0)
-		score += Scores[numRemovedLines - 1];
+	if(numFilledRows > 0){
+		score += Scores[numFilledRows - 1];
+		if(score > level * 500){
+			++level;
+			speed = speed > 5 ? 30 - level : 5;
+		}
+	}
+}
+
+function checkGameOver(){
+	if(activePiece.isCollision()){
+		gameState = GameState.GAME_OVER;
+	}
 }
 
 function printField(){
@@ -103,29 +131,24 @@ function printField(){
 function draw() {
 
 	if(gameState === GameState.PLAY){
-		if(frameCount % 20 === 0){
-			//activePiece.move(Direction.DOWN);
+		if(frameCount % speed === 0){
 			if(activePiece.isGroundTouch()){
 				activePiece.merge();
-				//++numMerge;
-				//console.log("numMerge = ", numMerge);				
+				checkFilledLines();		
 				spawnNewRandomTetramino();
-				//printField();
-				checkFilledLines();
+				checkGameOver();				
 			} else {
 				activePiece.oneStepDown();
 			}
 		}
 	}
-	
-	//activePiece.oneStepDown();
+
 	background(0);
 	renderField();
 	renderNextPiece();
 	renderScore();
 	renderGameStatus();
 	activePiece.render();
-	//printField();
 }
 
 function renderField(){	
@@ -178,7 +201,7 @@ function renderScore(){
 	stroke(color(0,255,0));
 	text("LINES REMOVED:\n" + numRemovedLines, tileSize * fieldWidth + 5, 200);
 	stroke(color(255,255,0));
-	text("LEVEL:\n" + level, tileSize * fieldWidth + 5, 250);
+	text("LEVEL:\n" + level /*+ "(" + speed + ")"*/, tileSize * fieldWidth + 5, 250);
 	
 }
 
