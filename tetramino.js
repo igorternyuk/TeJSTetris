@@ -10,6 +10,42 @@ class Tetramino {
 		this.farbe = prototypes[prototype].farbe;
 	}
 
+	isCollision(){
+		for(let y = 0; y < this.shape.length; ++y){
+			for(let x = 0; x < this.shape[y].length; ++x){
+				let currBlockX = this.x + x;
+				let currBlockY = this.y + y;
+				//console.log("bx = " + currBlockX + " by = " + currBlockY);				
+				if(this.shape[y][x] > 0){
+					if(currBlockY < 0 || currBlockY > field.length - 1
+					 ||currBlockX < 0 || currBlockX > field[currBlockY].length - 1){
+						return true;
+					}
+					if(field[currBlockY][currBlockX] > 0){
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	move(direction){
+		this.x += direction.x;
+		this.y += direction.y;
+		if(this.isCollision()){
+			console.log("cancel move");
+			this.x -= direction.x;
+			this.y -= direction.y;
+		}
+	}
+
+	oneStepDown(){
+		if(!this.isGroundTouch()){
+			this.move(Direction.DOWN);
+		}
+	}
+
 	rotateClockwise(){
 
 	}
@@ -18,32 +54,23 @@ class Tetramino {
 
 	}
 
-	move(direction){
-		this.x += direction.x;
-		this.y += direction.y;
-	}
-
-	oneStepDown(){
-		this.move(Direction.DOWN);
-	}
-
 	dropDown(){
 		while(!this.isGroundTouch()){
-			this.oneStepDown();
+			this.move(Direction.DOWN);
 		}
-		this.move(Direction.DOWN);;
 	}
 
 	merge(){
-		for(let y = 0; y < this.shape.length; ++y){
-			for(let x = 0; x < this.shape[y].length; ++x){
-				if(this.shape[y][x] > 0){
+		this.shape.forEach((row, y) => {
+			row.forEach((value, x) => {
+				if(value > 0){
 					let currBlockX = this.x + x;
 					let currBlockY = this.y + y;
-					field[currBlockY][currBlockX] = 1;
+					field[currBlockY][currBlockX] = this.shapeType + 1;
 				}
-			}
-		}
+			});
+		});
+		console.log("merging");
 	}
 
 	isGroundTouch(){

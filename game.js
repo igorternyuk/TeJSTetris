@@ -1,6 +1,6 @@
 var fieldWidth = 12;
 var fieldHeight = 20;
-var tileSize = 25;
+var tileSize = 18;
 var canvasWidth = tileSize * fieldWidth + 160;
 var canvasHeight = tileSize * fieldHeight;
 
@@ -12,17 +12,30 @@ var score = 0;
 var gameState = GameState.PLAY;
 var activePiece, nextPiece;
 var nextPieceX = tileSize * fieldWidth + 5;
-var nextPieceY = 60;
+var nextPieceY = 45;
+var numMerge = 0;
 
 function setup() {
     createCanvas(canvasWidth, canvasHeight);
-    frameRate(60);
+    frameRate(20);
     field = createMatrix(fieldHeight + 1, fieldWidth);
     activePiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
     nextPiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
 }
 
+function togglePause(){
+	if(gameState === GameState.PLAY){
+		gameState = GameState.PAUSED;
+	} else if(gameState === GameState.PAUSED){
+		gameState = GameState.PLAY;
+	}
+}
+
 function keyPressed(){
+	if(key === ' '){
+		togglePause();
+	} 
+	//console.log("keyCode = " + keyCode);
 	switch(keyCode){
 		case LEFT_ARROW:
 			activePiece.move(Direction.LEFT);
@@ -34,51 +47,65 @@ function keyPressed(){
 			activePiece.rotateCounterclockwise();
 			break;
 		case DOWN_ARROW:
-			activePiece.move(Direction.DOWN);
 			activePiece.rotateClockwise();
+		case 13:
+			activePiece.dropDown();
 			break;
 	}
 
-	if(key === ' '){
-		activePiece.dropDown;
-	}
+	
 }
 
 function spawnNewRandomTetramino(){
+	//activePiece.merge();
 	activePiece = nextPiece;
 	nextPiece = new Tetramino(fieldWidth / 2, 1, floor(random(7)));
 }
 
+function printField(){
+	field.forEach((row, y) => {
+		console.log(row);
+	});
+}
+
 //main loop
 function draw() {
-	if(frameCount % 60 === 0){
-		//activePiece.move(Direction.DOWN);
-		activePiece.oneStepDown();
-		if(activePiece.isGroundTouch()){
-			activePiece.merge();
-			spawnNewRandomTetramino();
+
+	if(gameState === GameState.PLAY){
+		if(frameCount % 20 === 0){
+			//activePiece.move(Direction.DOWN);
+			if(activePiece.isGroundTouch()){
+				activePiece.merge();
+				++numMerge;
+				console.log("numMerge = ", numMerge);				
+				spawnNewRandomTetramino();
+				printField();
+			} else {
+				activePiece.oneStepDown();
+			}
 		}
 	}
+	
 	//activePiece.oneStepDown();
 	background(0);
 	renderField();
 	renderNextPiece();
 	renderScore();
-	//activePiece.oneStepDown()
-
+	renderGameStatus();
 	activePiece.render();
+	//printField();
 }
 
-function renderField(){
-	fill(182,255,0);
+function renderField(){	
 	noStroke();
-	for(let y = 0; y < field.length - 2; ++y){
-		for(let x = 0; x < field[y].length - 1; ++x){
+	for(let y = 0; y < field.length - 1; ++y){
+		for(let x = 0; x < field[y].length; ++x){
 			let px = x * tileSize + tileSize;
 			let py = y * tileSize + tileSize;
+			fill(182,255,0);
 			ellipse(px, py, 3);
 			if(field[y][x] > 0){
-				fill(prototypes[field[y][x]].farbe);
+				fill(prototypes[field[y][x] - 1].farbe);
 				rect(x * tileSize + 1, y * tileSize + 1, tileSize - 1, tileSize - 1);
 			}
 		}
@@ -86,12 +113,12 @@ function renderField(){
 	noFill();
 	stroke(color(91,127,0));
 	strokeWeight(2);
-	rect(0,0,tileSize * fieldWidth, tileSize * fieldHeight - 2);
+	rect(0,0,tileSize * fieldWidth, tileSize * fieldHeight);
 }
 
 function renderNextPiece(){	
 	noFill();
-	stroke(color(255,0,0));
+	stroke("#8a2be2");
 	strokeWeight(2);
 	textFont('Arial');
 	textSize(16);
@@ -120,10 +147,26 @@ function renderScore(){
 	text("LINES REMOVED:\n" + numRemovedLines, tileSize * fieldWidth + 5, 200);
 	stroke(color(255,255,0));
 	text("LEVEL:\n" + level, tileSize * fieldWidth + 5, 250);
+	
 }
 
-function renderGameInfo(){
-	
+function renderGameStatus(){
+	stroke("#35bcf8");
+	text("GAME STATUS:", tileSize * fieldWidth + 5, 300);
+	switch(gameState){
+		case GameState.PLAY:
+			stroke("#6dc066");
+			text("PLAY", tileSize * fieldWidth + 5, 325);
+			break;
+		case GameState.PAUSED:
+			stroke("#e4f201");
+			text("PAUSED", tileSize * fieldWidth + 5, 325);
+			break;
+		case GameState.GAME_OVER:
+			stroke("#ff4040");
+			text("GAME OVER!!!", tileSize * fieldWidth + 5, 325);
+			break;
+	}
 }
 
 function createMatrix(rowCount, colCount){
@@ -135,6 +178,12 @@ function createMatrix(rowCount, colCount){
 		for(let x = 0; x < matrix[y].length; ++x){
 			matrix[y][x] = 0;
 		}
+	}
+
+	//Create bottom of the well
+	let lastRow = matrix.length - 1;
+	for(let x = 0; x < matrix[lastRow].length; ++x){
+			matrix[lastRow][x] = 1;
 	}
 	return matrix;
 }
